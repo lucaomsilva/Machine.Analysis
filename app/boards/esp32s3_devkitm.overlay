@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2025 SMID Project
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Description: Device Tree Overlay for ESP32-S3 with ST7796S Display
+ */
+
+/ {
+	chosen {
+		zephyr,display = &st7796s;
+	};
+};
+
+/* SPI2 Configuration (Main SPI on ESP32-S3) */
+&spi2 {
+	status = "okay";
+	pinctrl-0 = <&spim2_default>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
+
+	/* Display Definition */
+	st7796s: st7796s@0 {
+		compatible = "sitronix,st7796s";
+		reg = <0>;
+		spi-max-frequency = <40000000>; /* 40MHz */
+		
+		/* Control Pins */
+		cmd-data-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;  /* DC */
+		reset-gpios    = <&gpio0 9 GPIO_ACTIVE_LOW>;  /* RST */
+		
+		/* Display Geometry */
+		width = <320>;
+		height = <480>;
+		
+		/* Pixel Format (16-bit RGB565 is standard for MCU) */
+		pixel-format = <0>; 
+		rotation = <0>;
+	};
+};
+
+/* Pin Control (Pin Muxing) */
+&pinctrl {
+	spim2_default: spim2_default {
+		group1 {
+			pinmux = <SPIM2_MISO_GPIO13>,
+				     <SPIM2_MOSI_GPIO11>,
+				     <SPIM2_SCLK_GPIO12>;
+		};
+	};
+};
