@@ -1,44 +1,53 @@
 /*
  * Copyright (c) 2025 SMID Project
- * SPDX-License-Identifier: Apache-2.0
- *
- * Description: Device Tree Overlay for ESP32-S3 with ST7796S Display
+ * Description: MIPI DBI Overlay for ST7796S (Rotation Removed)
  */
 
 / {
 	chosen {
 		zephyr,display = &st7796s;
 	};
+
+	mipi_dbi {
+		compatible = "zephyr,mipi-dbi-spi";
+		status = "okay";
+		spi-dev = <&spi2>;
+		
+		/* Controles da Ponte MIPI */
+		dc-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
+		
+		write-only;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		st7796s: st7796s@0 {
+			compatible = "sitronix,st7796s";
+			status = "okay";
+			reg = <0>;
+			mipi-max-frequency = <40000000>;
+			
+			width = <320>;
+			height = <480>;
+			
+			/* REMOVIDO: rotation = <0>; (Não suportado no YAML) */
+			
+			pixel-format = <0>;
+
+			/* Calibração Gamma */
+			pgc = [F0 09 0B 06 04 15 2F 54 42 3C 17 14 18 1B];
+			ngc = [E0 09 0B 06 04 03 2B 43 42 3B 16 14 17 1B];
+		};
+	};
 };
 
-/* SPI2 Configuration (Main SPI on ESP32-S3) */
 &spi2 {
 	status = "okay";
 	pinctrl-0 = <&spim2_default>;
 	pinctrl-names = "default";
 	cs-gpios = <&gpio0 10 GPIO_ACTIVE_LOW>;
-
-	/* Display Definition */
-	st7796s: st7796s@0 {
-		compatible = "sitronix,st7796s";
-		reg = <0>;
-		spi-max-frequency = <40000000>; /* 40MHz */
-		
-		/* Control Pins */
-		cmd-data-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;  /* DC */
-		reset-gpios    = <&gpio0 9 GPIO_ACTIVE_LOW>;  /* RST */
-		
-		/* Display Geometry */
-		width = <320>;
-		height = <480>;
-		
-		/* Pixel Format (16-bit RGB565 is standard for MCU) */
-		pixel-format = <0>; 
-		rotation = <0>;
-	};
 };
 
-/* Pin Control (Pin Muxing) */
 &pinctrl {
 	spim2_default: spim2_default {
 		group1 {
